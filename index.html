@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>ReportBot Web Chat</title>
+    <style>
+        body { font-family: sans-serif; margin:2rem; }
+        #chat { border:1px solid #ccc; padding:1rem; height:60vh; overflow-y:auto; }
+        .user { text-align:right; color:#004; margin:.5rem 0; }
+        .bot  { text-align:left; color:#070; margin:.5rem 0; }
+        #input { width:80%; padding:.5rem; }
+        #send  { padding:.5rem 1rem; }
+    </style>
+</head>
+<body>
+<h1>ReportBot Web Chat</h1>
+<div id="chat"></div>
+<input id="input" type="text" placeholder="Type your requirement…" autofocus/>
+<button id="send">Send</button>
+
+<script>
+    const chatEl = document.getElementById('chat');
+    const inputEl = document.getElementById('input');
+    const sendBtn = document.getElementById('send');
+
+    function appendMessage(who, text) {
+      const div = document.createElement('div');
+      div.className = who;
+      div.textContent = text;
+      chatEl.appendChild(div);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const userText = inputEl.value.trim();
+      if (!userText) return;
+      appendMessage('user', userText);
+      inputEl.value = '';
+      try {
+        const resp = await fetch('https://your-n8n-domain/webhook/web-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ requirement: userText })
+        });
+        const data = await resp.json();
+        appendMessage('bot', data.reply);
+      } catch (err) {
+        appendMessage('bot', '⚠️ Error: ' + err.message);
+      }
+    }
+
+    sendBtn.onclick = sendMessage;
+    inputEl.onkeydown = e => { if (e.key === 'Enter') sendMessage(); };
+</script>
+</body>
+</html>
